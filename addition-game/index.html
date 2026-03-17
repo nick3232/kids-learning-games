@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Addition Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f7f7fb;
+      color: #222;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    .app {
+      width: min(100%, 520px);
+      min-height: 100dvh;
+      padding: 12px 14px 18px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    .start-screen,
+    .end-screen {
+      justify-content: center;
+      gap: 18px;
+      text-align: center;
+    }
+
+    .title {
+      font-size: clamp(2rem, 8vw, 3rem);
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      margin: 0;
+      color: #555;
+      max-width: 340px;
+      line-height: 1.4;
+    }
+
+    .start-art,
+    .end-art {
+      background: white;
+      border-radius: 24px;
+      padding: 20px;
+      width: 100%;
+      max-width: 320px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+
+    .start-emoji,
+    .end-emoji {
+      font-size: clamp(2.2rem, 10vw, 3.5rem);
+      line-height: 1.4;
+    }
+
+    .button-stack {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .play-btn,
+    .level-btn,
+    .again-btn,
+    .advance-btn,
+    .next-btn,
+    .choice-btn,
+    .back-btn {
+      border: none;
+      border-radius: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .play-btn,
+    .level-btn,
+    .again-btn,
+    .advance-btn,
+    .next-btn,
+    .back-btn {
+      width: 100%;
+      max-width: 320px;
+      padding: 14px 16px;
+      font-size: 1.15rem;
+      text-decoration: none;
+      color: #222;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .level-btn.level-1-btn,
+    .again-btn.level-1-btn {
+      background: #93c5fd;
+    }
+
+    .level-btn.level-2-btn,
+    .advance-btn,
+    .again-btn.level-2-btn {
+      background: #c4b5fd;
+    }
+
+    .back-btn {
+      background: #cbd5e1;
+    }
+
+    .next-btn {
+      background: #86efac;
+      margin-top: 10px;
+    }
+
+    .next-btn:disabled {
+      background: #cbd5e1;
+      color: #666;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .game-screen {
+      justify-content: flex-start;
+      gap: 10px;
+    }
+
+    .problem-box {
+      width: 100%;
+      height: 32vh;
+      min-height: 170px;
+      max-height: 250px;
+      background: white;
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      user-select: none;
+      padding: 12px 10px;
+      gap: 10px;
+    }
+
+    .problem-label {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #666;
+      letter-spacing: 0.04em;
+      text-align: center;
+    }
+
+    .problem {
+      font-size: clamp(3.2rem, 14vw, 5.5rem);
+      font-weight: bold;
+      line-height: 1;
+      text-align: center;
+      color: #333;
+    }
+
+    .choices {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .choice-btn {
+      padding: 14px 0;
+      font-size: 1.9rem;
+      background: #e9e9ff;
+    }
+
+    .choice-btn.correct {
+      background: #86efac;
+    }
+
+    .choice-btn.wrong {
+      background: #fca5a5;
+    }
+
+    .choice-btn:disabled {
+      opacity: 0.98;
+      cursor: default;
+    }
+
+    .message {
+      min-height: 32px;
+      font-size: 1.25rem;
+      font-weight: bold;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .progress {
+      font-size: 1rem;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="screen start-screen active" id="startScreen">
+      <h1 class="title">Addition Game</h1>
+      <p class="subtitle">Choose a level and solve the addition problems.</p>
+
+      <div class="start-art">
+        <div class="start-emoji">➕ 2 + 3 = ? ⭐</div>
+      </div>
+
+      <div class="button-stack">
+        <button class="level-btn level-1-btn" id="level1Btn">Play Level 1</button>
+        <button class="level-btn level-2-btn" id="level2Btn">Play Level 2</button>
+        <a class="back-btn" href="../">Back to Games</a>
+      </div>
+    </div>
+
+    <div class="screen game-screen" id="gameScreen">
+      <div class="problem-box">
+        <div class="problem-label" id="problemLabel">Level 1</div>
+        <div class="problem" id="problemDisplay">2 + 3</div>
+      </div>
+
+      <div class="choices" id="choices"></div>
+
+      <div class="message" id="message"></div>
+      <div class="progress" id="progress"></div>
+
+      <button class="next-btn" id="nextBtn" disabled>Next</button>
+    </div>
+
+    <div class="screen end-screen" id="endScreen">
+      <h1 class="title">Great Job!</h1>
+      <p class="subtitle" id="endSubtitle">You completed Level 1.</p>
+
+      <div class="end-art">
+        <div class="end-emoji" id="endEmoji">🎉 ➕ ⭐ 1 2 3 🎉</div>
+      </div>
+
+      <div class="button-stack">
+        <button class="again-btn level-1-btn" id="replayLevel1Btn">Play Level 1 Again</button>
+        <button class="advance-btn" id="level2AdvanceBtn">Go to Level 2</button>
+        <button class="again-btn level-2-btn hidden" id="replayLevel2Btn">Play Level 2 Again</button>
+        <a class="back-btn" href="../">Back to Games</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const level1Items = [
+      { problem: "1 + 1", correct: 2, choices: [1, 2, 3, 4] },
+      { problem: "1 + 2", correct: 3, choices: [2, 3, 4, 5] },
+      { problem: "2 + 1", correct: 3, choices: [1, 2, 3, 4] },
+      { problem: "2 + 2", correct: 4, choices: [3, 4, 5, 6] },
+      { problem: "2 + 3", correct: 5, choices: [4, 5, 6, 7] },
+      { problem: "3 + 1", correct: 4, choices: [2, 3, 4, 5] },
+      { problem: "3 + 2", correct: 5, choices: [3, 4, 5, 6] },
+      { problem: "4 + 1", correct: 5, choices: [4, 5, 6, 7] },
+      { problem: "4 + 2", correct: 6, choices: [5, 6, 7, 8] },
+      { problem: "5 + 1", correct: 6, choices: [4, 5, 6, 7] }
+    ];
+
+    const level2Items = [
+      { problem: "5 + 5", correct: 10, choices: [9, 10, 11, 12] },
+      { problem: "6 + 4", correct: 10, choices: [10, 11, 12, 13] },
+      { problem: "6 + 5", correct: 11, choices: [10, 11, 12, 13] },
+      { problem: "7 + 5", correct: 12, choices: [11, 12, 13, 14] },
+      { problem: "8 + 5", correct: 13, choices: [12, 13, 14, 15] },
+      { problem: "7 + 7", correct: 14, choices: [13, 14, 15, 16] },
+      { problem: "8 + 7", correct: 15, choices: [14, 15, 16, 17] },
+      { problem: "9 + 7", correct: 16, choices: [15, 16, 17, 18] },
+      { problem: "9 + 8", correct: 17, choices: [16, 17, 18, 19] },
+      { problem: "9 + 9", correct: 18, choices: [17, 18, 19, 20] }
+    ];
+
+    let items = [];
+    let currentIndex = 0;
+    let answered = false;
+    let currentLevel = 1;
+
+    const startScreen = document.getElementById("startScreen");
+    const gameScreen = document.getElementById("gameScreen");
+    const endScreen = document.getElementById("endScreen");
+
+    const level1Btn = document.getElementById("level1Btn");
+    const level2Btn = document.getElementById("level2Btn");
+
+    const problemLabel = document.getElementById("problemLabel");
+    const problemDisplay = document.getElementById("problemDisplay");
+    const choicesEl = document.getElementById("choices");
+    const messageEl = document.getElementById("message");
+    const progressEl = document.getElementById("progress");
+    const nextBtn = document.getElementById("nextBtn");
+
+    const endSubtitle = document.getElementById("endSubtitle");
+    const replayLevel1Btn = document.getElementById("replayLevel1Btn");
+    const level2AdvanceBtn = document.getElementById("level2AdvanceBtn");
+    const replayLevel2Btn = document.getElementById("replayLevel2Btn");
+
+    function shuffleArray(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function showScreen(screenToShow) {
+      startScreen.classList.remove("active");
+      gameScreen.classList.remove("active");
+      endScreen.classList.remove("active");
+      screenToShow.classList.add("active");
+    }
+
+    function getLevelItems(level) {
+      return level === 1 ? level1Items : level2Items;
+    }
+
+    function startGame(level) {
+      currentLevel = level;
+      items = shuffleArray(getLevelItems(level));
+      currentIndex = 0;
+      showScreen(gameScreen);
+      renderItem();
+    }
+
+    function renderItem() {
+      answered = false;
+      messageEl.textContent = "";
+      nextBtn.disabled = true;
+
+      const item = items[currentIndex];
+      problemLabel.textContent = "Level " + currentLevel;
+      problemDisplay.textContent = item.problem;
+      progressEl.textContent = (currentIndex + 1) + " / " + items.length;
+
+      const shuffledChoices = shuffleArray(item.choices);
+      choicesEl.innerHTML = "";
+
+      shuffledChoices.forEach(number => {
+        const btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.textContent = number;
+        btn.addEventListener("click", () => handleChoice(btn, number, item.correct));
+        choicesEl.appendChild(btn);
+      });
+    }
+
+    function handleChoice(button, selectedNumber, correctNumber) {
+      if (answered) return;
+
+      const allButtons = document.querySelectorAll(".choice-btn");
+
+      if (selectedNumber === correctNumber) {
+        answered = true;
+        button.classList.add("correct");
+        messageEl.textContent = "Great job!";
+        nextBtn.disabled = false;
+
+        allButtons.forEach(btn => {
+          btn.disabled = true;
+          if (Number(btn.textContent) === correctNumber) {
+            btn.classList.add("correct");
+          }
+        });
+      } else {
+        button.classList.add("wrong");
+        messageEl.textContent = "Try again!";
+        button.disabled = true;
+      }
+    }
+
+    function showEndScreen() {
+      if (currentLevel === 1) {
+        endSubtitle.textContent = "You completed Level 1.";
+        replayLevel1Btn.textContent = "Play Level 1 Again";
+        replayLevel1Btn.classList.remove("hidden");
+        level2AdvanceBtn.classList.remove("hidden");
+        replayLevel2Btn.classList.add("hidden");
+      } else {
+        endSubtitle.textContent = "You completed Level 2.";
+        replayLevel1Btn.textContent = "Play Level 1";
+        replayLevel1Btn.classList.remove("hidden");
+        level2AdvanceBtn.classList.add("hidden");
+        replayLevel2Btn.classList.remove("hidden");
+      }
+
+      showScreen(endScreen);
+    }
+
+    function goToNextItem() {
+      if (!answered) return;
+
+      currentIndex++;
+
+      if (currentIndex >= items.length) {
+        showEndScreen();
+        return;
+      }
+
+      renderItem();
+    }
+
+    level1Btn.addEventListener("click", () => startGame(1));
+    level2Btn.addEventListener("click", () => startGame(2));
+    replayLevel1Btn.addEventListener("click", () => startGame(1));
+    level2AdvanceBtn.addEventListener("click", () => startGame(2));
+    replayLevel2Btn.addEventListener("click", () => startGame(2));
+    nextBtn.addEventListener("click", goToNextItem);
+  </script>
+</body>
+</html>

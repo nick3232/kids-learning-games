@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>First Letter Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f7f7fb;
+      color: #222;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    .app {
+      width: min(100%, 520px);
+      min-height: 100dvh;
+      padding: 12px 14px 18px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    .start-screen,
+    .end-screen {
+      justify-content: center;
+      gap: 18px;
+      text-align: center;
+    }
+
+    .title {
+      font-size: clamp(2rem, 8vw, 3rem);
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      margin: 0;
+      color: #555;
+      max-width: 340px;
+      line-height: 1.4;
+    }
+
+    .start-art,
+    .end-art {
+      background: white;
+      border-radius: 24px;
+      padding: 20px;
+      width: 100%;
+      max-width: 320px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+
+    .start-emoji,
+    .end-emoji {
+      font-size: clamp(2.2rem, 10vw, 3.5rem);
+      line-height: 1.4;
+    }
+
+    .button-stack {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .play-btn,
+    .again-btn,
+    .next-btn,
+    .choice-btn,
+    .back-btn {
+      border: none;
+      border-radius: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .play-btn,
+    .again-btn,
+    .next-btn,
+    .back-btn {
+      width: 100%;
+      max-width: 320px;
+      padding: 14px 16px;
+      font-size: 1.15rem;
+      text-decoration: none;
+      color: #222;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .play-btn {
+      background: #f9a8d4;
+    }
+
+    .again-btn {
+      background: #fcd34d;
+    }
+
+    .back-btn {
+      background: #cbd5e1;
+    }
+
+    .next-btn {
+      background: #86efac;
+      margin-top: 10px;
+    }
+
+    .next-btn:disabled {
+      background: #cbd5e1;
+      color: #666;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .game-screen {
+      justify-content: flex-start;
+      gap: 10px;
+    }
+
+    .image-box {
+      width: 100%;
+      height: 32vh;
+      min-height: 170px;
+      max-height: 250px;
+      background: white;
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      user-select: none;
+      padding: 12px 10px;
+      gap: 10px;
+    }
+
+    .emoji {
+      font-size: clamp(4.5rem, 18vw, 8rem);
+      line-height: 1;
+    }
+
+    .word-label {
+      font-size: clamp(1.6rem, 6vw, 2.3rem);
+      font-weight: bold;
+      letter-spacing: 0.06em;
+      text-align: center;
+      color: #333;
+    }
+
+    .choices {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .choice-btn {
+      padding: 14px 0;
+      font-size: 1.9rem;
+      background: #e9e9ff;
+    }
+
+    .choice-btn.correct {
+      background: #86efac;
+    }
+
+    .choice-btn.wrong {
+      background: #fca5a5;
+    }
+
+    .choice-btn:disabled {
+      opacity: 0.98;
+      cursor: default;
+    }
+
+    .message {
+      min-height: 32px;
+      font-size: 1.25rem;
+      font-weight: bold;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .progress {
+      font-size: 1rem;
+      color: #666;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="screen start-screen active" id="startScreen">
+      <h1 class="title">Letter Game</h1>
+      <p class="subtitle">Look at the picture, read the word, and choose the first letter.</p>
+
+      <div class="start-art">
+        <div class="start-emoji">🍎 🚜 🐶 🏗️ 🍌</div>
+      </div>
+
+      <div class="button-stack">
+        <button class="play-btn" id="playBtn">Play</button>
+        <a class="back-btn" href="../">Back to Games</a>
+      </div>
+    </div>
+
+    <div class="screen game-screen" id="gameScreen">
+      <div class="image-box">
+        <div class="emoji" id="emojiDisplay">🍎</div>
+        <div class="word-label" id="wordDisplay">APPLE</div>
+      </div>
+
+      <div class="choices" id="choices"></div>
+
+      <div class="message" id="message"></div>
+      <div class="progress" id="progress"></div>
+
+      <button class="next-btn" id="nextBtn" disabled>Next</button>
+    </div>
+
+    <div class="screen end-screen" id="endScreen">
+      <h1 class="title">Great Job!</h1>
+      <p class="subtitle">Congratulations, you completed the game.</p>
+
+      <div class="end-art">
+        <div class="end-emoji">🎉 ⭐ 🚜 🍎 🐶 ⭐ 🎉</div>
+      </div>
+
+      <div class="button-stack">
+        <button class="again-btn" id="againBtn">Play Again</button>
+        <a class="back-btn" href="../">Back to Games</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const originalItems = [
+      { emoji: "🍎", word: "Apple", correct: "A", choices: ["A", "B", "C", "D"] },
+      { emoji: "🍌", word: "Banana", correct: "B", choices: ["B", "M", "S", "T"] },
+      { emoji: "🐱", word: "Cat", correct: "C", choices: ["C", "D", "P", "R"] },
+      { emoji: "🐶", word: "Dog", correct: "D", choices: ["D", "L", "N", "S"] },
+      { emoji: "🐘", word: "Elephant", correct: "E", choices: ["E", "F", "H", "K"] },
+      { emoji: "🐟", word: "Fish", correct: "F", choices: ["F", "J", "Q", "W"] },
+      { emoji: "🍇", word: "Grapes", correct: "G", choices: ["G", "L", "O", "Y"] },
+      { emoji: "🚜", word: "Tractor", correct: "T", choices: ["T", "B", "C", "M"] },
+      { emoji: "🏗️", word: "Crane", correct: "C", choices: ["C", "D", "G", "P"] },
+      { emoji: "🚛", word: "Truck", correct: "T", choices: ["T", "F", "L", "R"] },
+      { emoji: "🚚", word: "Van", correct: "V", choices: ["V", "N", "S", "W"] },
+      { emoji: "🛻", word: "Pickup", correct: "P", choices: ["P", "H", "K", "R"] }
+    ];
+
+    let items = [];
+    let currentIndex = 0;
+    let answered = false;
+
+    const startScreen = document.getElementById("startScreen");
+    const gameScreen = document.getElementById("gameScreen");
+    const endScreen = document.getElementById("endScreen");
+    const playBtn = document.getElementById("playBtn");
+    const againBtn = document.getElementById("againBtn");
+    const emojiDisplay = document.getElementById("emojiDisplay");
+    const wordDisplay = document.getElementById("wordDisplay");
+    const choicesEl = document.getElementById("choices");
+    const messageEl = document.getElementById("message");
+    const progressEl = document.getElementById("progress");
+    const nextBtn = document.getElementById("nextBtn");
+
+    function shuffleArray(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function showScreen(screenToShow) {
+      startScreen.classList.remove("active");
+      gameScreen.classList.remove("active");
+      endScreen.classList.remove("active");
+      screenToShow.classList.add("active");
+    }
+
+    function startGame() {
+      items = shuffleArray(originalItems);
+      currentIndex = 0;
+      showScreen(gameScreen);
+      renderItem();
+    }
+
+    function renderItem() {
+      answered = false;
+      messageEl.textContent = "";
+      nextBtn.disabled = true;
+
+      const item = items[currentIndex];
+      emojiDisplay.textContent = item.emoji;
+      wordDisplay.textContent = item.word.toUpperCase();
+      progressEl.textContent = (currentIndex + 1) + " / " + items.length;
+
+      const shuffledChoices = shuffleArray(item.choices);
+      choicesEl.innerHTML = "";
+
+      shuffledChoices.forEach(letter => {
+        const btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.textContent = letter;
+        btn.addEventListener("click", () => handleChoice(btn, letter, item.correct));
+        choicesEl.appendChild(btn);
+      });
+    }
+
+    function handleChoice(button, selectedLetter, correctLetter) {
+      if (answered) return;
+
+      const allButtons = document.querySelectorAll(".choice-btn");
+
+      if (selectedLetter === correctLetter) {
+        answered = true;
+        button.classList.add("correct");
+        messageEl.textContent = "Great job!";
+        nextBtn.disabled = false;
+
+        allButtons.forEach(btn => {
+          btn.disabled = true;
+          if (btn.textContent === correctLetter) {
+            btn.classList.add("correct");
+          }
+        });
+      } else {
+        button.classList.add("wrong");
+        messageEl.textContent = "Try again!";
+        button.disabled = true;
+      }
+    }
+
+    function goToNextItem() {
+      if (!answered) return;
+
+      currentIndex++;
+
+      if (currentIndex >= items.length) {
+        showScreen(endScreen);
+        return;
+      }
+
+      renderItem();
+    }
+
+    playBtn.addEventListener("click", startGame);
+    againBtn.addEventListener("click", startGame);
+    nextBtn.addEventListener("click", goToNextItem);
+  </script>
+</body>
+</html>

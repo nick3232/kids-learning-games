@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kids Learning Games</title>
+
+<style>
+
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#f6f7fb;
+  display:flex;
+  justify-content:center;
+}
+
+.container{
+  width:min(100%,600px);
+  padding:20px;
+}
+
+.title{
+  text-align:center;
+  font-size:2.5rem;
+  margin-bottom:10px;
+}
+
+.subtitle{
+  text-align:center;
+  color:#555;
+  margin-bottom:30px;
+}
+
+.game-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:16px;
+}
+
+.game-button{
+  display:block;
+  text-decoration:none;
+  font-size:1.3rem;
+  font-weight:bold;
+  padding:18px;
+  border-radius:18px;
+  text-align:center;
+  color:#222;
+  background:white;
+  box-shadow:0 6px 16px rgba(0,0,0,.08);
+  transition:transform .05s;
+}
+
+.game-button:hover{
+  transform:scale(1.02);
+}
+
+.footer{
+  margin-top:30px;
+  text-align:center;
+  color:#777;
+  font-size:.9rem;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1 class="title">Kids Learning Games</h1>
+
+<p class="subtitle">
+Choose a game to start playing.
+</p>
+
+<div class="game-grid">
+
+<a class="game-button" href="first-letter-game/">
+First Letter Game
+</a>
+
+<a class="game-button" href="addition-game/">
+Addition Game
+</a>
+
+<a class="game-button" href="subtraction-game/">
+Subtraction Game
+</a>
+
+<a class="game-button" href="counting-game/">
+Counting Game
+</a>
+
+<a class="game-button" href="space-math/">
+Space Math
+</a>
+
+<a class="game-button" href="dino-matchup/">
+Dino Matchup
+</a>
+
+<a class="game-button" href="matching-game/">
+Matching Game
+</a>
+
+</div>
+
+<div class="footer">
+New games will appear here automatically as they are added.
+</div>
+
+</div>
+
+</body>
+</html>

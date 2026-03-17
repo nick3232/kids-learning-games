@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Journey Math Game</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+<style>
+/* =========================================================
+   Space Journey Math Game — Smooth Rocket Update
+========================================================= */
+
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --accent: #38bdf8;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+header h1 {
+  font-size: 1.8rem;
+  color: var(--accent);
+  margin: 0;
+}
+
+header p {
+  color: var(--muted);
+  margin-top: 0.25rem;
+  font-size: 1rem;
+}
+
+/* ---------- Game container ---------- */
+.game-container {
+  background: var(--surface);
+  border-radius: 1rem;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  width: 90%;
+  max-width: 640px;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+#map {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 1.8rem;
+  margin-bottom: 0.6rem;
+  position: relative;
+}
+
+#rocketRow {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 1.8rem;
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+
+.map-icon {
+  opacity: 0.25;
+  transition: opacity 0.4s;
+}
+
+.map-icon.active {
+  opacity: 1;
+}
+
+/* ---------- Rocket movement ---------- */
+#rocket {
+  position: absolute;
+  top: -0.1rem;
+  font-size: 1.8rem;
+  transition: transform 0.6s ease-in-out;
+}
+
+/* ---------- Question/Answer ---------- */
+#question {
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+}
+
+input[type="text"] {
+  font-size: 1.2rem;
+  padding: 0.4rem;
+  border-radius: 0.4rem;
+  border: none;
+  width: 80px;
+  text-align: center;
+  outline: none;
+}
+
+#submitBtn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+}
+
+#feedback {
+  margin-top: 0.6rem;
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+/* ---------- Controls ---------- */
+.controls {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+#startResetBtn,
+.back-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.8rem 2rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  width: 220px;
+  transition: 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.back-btn {
+  background: #475569;
+}
+
+#startResetBtn:hover,
+.back-btn:hover {
+  opacity: 0.9;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  header h1 { font-size: 1.4rem; }
+  .game-container { aspect-ratio: 1 / 1; }
+  #map, #rocketRow { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌍 Space Journey Math Game</h1>
+  <p>Answer correctly to travel from Earth to the Moon!</p>
+</header>
+
+<div class="game-container">
+  <div id="map"></div>
+  <div id="rocketRow"><div id="rocket">🚀</div></div>
+  <div id="question">Press Start to begin</div>
+  <div>
+    <input id="answer" type="text" disabled>
+    <button id="submitBtn" disabled>Answer</button>
+  </div>
+  <div id="feedback"></div>
+</div>
+
+<div class="controls">
+  <button id="startResetBtn">Start / Reset</button>
+  <a class="back-btn" id="backToGamesBtn" href="../">Back to Games</a>
+</div>
+
+<script>
+/* =========================================================
+   Space Journey Math Game Logic (Smooth Rocket)
+========================================================= */
+
+const mapIcons = ["🌍","☁️","🛰️","🌌","🪐","☄️","🌠","🛸","🧑‍🚀","🌕"];
+const mapContainer = document.getElementById("map");
+const rocketRow = document.getElementById("rocketRow");
+const rocket = document.getElementById("rocket");
+const questionEl = document.getElementById("question");
+const answerInput = document.getElementById("answer");
+const submitBtn = document.getElementById("submitBtn");
+const feedbackEl = document.getElementById("feedback");
+const startResetBtn = document.getElementById("startResetBtn");
+const backToGamesBtn = document.getElementById("backToGamesBtn");
+
+let currentIndex = 0;
+let correctAnswers = 0;
+let currentAnswer = null;
+
+function createMap() {
+  mapContainer.innerHTML = "";
+  mapIcons.forEach((icon, i) => {
+    const span = document.createElement("span");
+    span.textContent = icon;
+    span.className = "map-icon" + (i === 0 ? " active" : "");
+    mapContainer.appendChild(span);
+  });
+  moveRocket(0);
+}
+
+function generateQuestion() {
+  const a = Math.floor(Math.random() * 9) + 1;
+  const b = Math.floor(Math.random() * 9) + 1;
+  currentAnswer = a + b;
+  questionEl.textContent = `${a} + ${b} = ?`;
+  feedbackEl.textContent = "";
+  answerInput.value = "";
+}
+
+function startGame() {
+  correctAnswers = 0;
+  currentIndex = 0;
+  createMap();
+  generateQuestion();
+  answerInput.disabled = false;
+  submitBtn.disabled = false;
+  backToGamesBtn.classList.add("hidden");
+  answerInput.focus();
+}
+
+function checkAnswer() {
+  const userAnswer = Number(answerInput.value.trim());
+  if (userAnswer === currentAnswer) {
+    correctAnswers++;
+    updateMap();
+    if (correctAnswers === mapIcons.length - 1) {
+      questionEl.textContent = "🌕 Mission Complete! 🎉";
+      feedbackEl.textContent = "";
+      answerInput.disabled = true;
+      submitBtn.disabled = true;
+      backToGamesBtn.classList.remove("hidden");
+    } else {
+      feedbackEl.textContent = "✅ Correct!";
+      generateQuestion();
+    }
+  } else {
+    feedbackEl.textContent = "❌ Try again!";
+  }
+}
+
+function updateMap() {
+  const icons = document.querySelectorAll(".map-icon");
+  if (currentIndex < icons.length - 1) {
+    currentIndex++;
+    icons[currentIndex].classList.add("active");
+    moveRocket(currentIndex);
+  }
+}
+
+function moveRocket(index) {
+  const icons = document.querySelectorAll(".map-icon");
+  if (!icons.length) return;
+
+  const target = icons[index];
+  const rocketWidth = rocket.offsetWidth / 2;
+  const mapRect = mapContainer.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+
+  const offset = (targetRect.left - mapRect.left) + targetRect.width / 2 - rocketWidth;
+  rocket.style.transform = `translateX(${offset}px)`;
+}
+
+function resetGame() {
+  startGame();
+}
+
+submitBtn.addEventListener("click", checkAnswer);
+answerInput.addEventListener("keypress", e => {
+  if (e.key === "Enter" && !submitBtn.disabled) checkAnswer();
+});
+startResetBtn.addEventListener("click", resetGame);
+
+// Initialize
+createMap();
+</script>
+
+</body>
+</html>

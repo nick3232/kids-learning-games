@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matching Grid Game</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h1>Matching Grid Game</h1>
+  <div id="boardName" class="board-name"></div>
+
+  <div class="grid" id="grid"></div>
+  <div class="feedback" id="feedback"></div>
+
+  <div class="bottom-bar">
+    <button id="restartBtn">Restart</button>
+    <button id="menuBtn">Game Selection</button>
+  </div>
+
+  <!-- Game Selection Overlay -->
+  <div id="menuOverlay" class="menu-overlay">
+    <div class="menu-box">
+      <button id="closeMenu" class="close-btn">✕</button>
+      <h2>Select a Game Board</h2>
+      <div class="menu-options">
+        <button class="menu-option" data-board="fruit">🍎 Fruit</button>
+        <button class="menu-option" data-board="shapes">🔺 Shapes</button>
+        <button class="menu-option" data-board="transportation">🚒 Transportation</button>
+        <a class="menu-option" href="../">Back to Games</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
