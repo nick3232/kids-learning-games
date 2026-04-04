@@ -30,6 +30,7 @@
       padding: 12px 14px 18px;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
 
     .screen {
@@ -88,13 +89,14 @@
       gap: 12px;
     }
 
-    .play-btn,
     .level-btn,
+    .select-btn,
     .again-btn,
-    .advance-btn,
+    .next-level-btn,
     .next-btn,
     .choice-btn,
-    .back-btn {
+    .back-btn,
+    .close-btn {
       border: none;
       border-radius: 18px;
       font-weight: bold;
@@ -102,12 +104,13 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     }
 
-    .play-btn,
     .level-btn,
+    .select-btn,
     .again-btn,
-    .advance-btn,
+    .next-level-btn,
     .next-btn,
-    .back-btn {
+    .back-btn,
+    .close-btn {
       width: 100%;
       max-width: 320px;
       padding: 14px 16px;
@@ -119,18 +122,18 @@
       justify-content: center;
     }
 
-    .level-btn.level-1-btn,
-    .again-btn.level-1-btn {
+    .level-btn,
+    .again-btn,
+    .next-level-btn {
       background: #93c5fd;
     }
 
-    .level-btn.level-2-btn,
-    .advance-btn,
-    .again-btn.level-2-btn {
+    .select-btn {
       background: #c4b5fd;
     }
 
-    .back-btn {
+    .back-btn,
+    .close-btn {
       background: #cbd5e1;
     }
 
@@ -231,21 +234,69 @@
     .hidden {
       display: none;
     }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.38);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 20;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      width: min(100%, 360px);
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.16);
+      padding: 20px 16px 16px;
+      text-align: center;
+    }
+
+    .modal-title {
+      margin: 0 0 8px;
+      font-size: 1.6rem;
+    }
+
+    .modal-subtitle {
+      margin: 0 0 16px;
+      color: #555;
+      line-height: 1.4;
+      font-size: 1rem;
+    }
+
+    .modal-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .modal-level-btn.level-1-btn { background: #93c5fd; }
+    .modal-level-btn.level-2-btn { background: #a5b4fc; }
+    .modal-level-btn.level-3-btn { background: #c4b5fd; }
+    .modal-level-btn.level-4-btn { background: #f9a8d4; }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="screen start-screen active" id="startScreen">
       <h1 class="title">Addition Game</h1>
-      <p class="subtitle">Choose a level and solve the addition problems.</p>
+      <p class="subtitle">Play through four levels of addition practice.</p>
 
       <div class="start-art">
         <div class="start-emoji">➕ 2 + 3 = ? ⭐</div>
       </div>
 
       <div class="button-stack">
-        <button class="level-btn level-1-btn" id="level1Btn">Play Level 1</button>
-        <button class="level-btn level-2-btn" id="level2Btn">Play Level 2</button>
+        <button class="level-btn" id="playStartBtn">Play Level 1</button>
+        <button class="select-btn" id="openLevelSelectFromStartBtn">Select Level</button>
         <a class="back-btn" href="../">Back to Games</a>
       </div>
     </div>
@@ -273,10 +324,24 @@
       </div>
 
       <div class="button-stack">
-        <button class="again-btn level-1-btn" id="replayLevel1Btn">Play Level 1 Again</button>
-        <button class="advance-btn" id="level2AdvanceBtn">Go to Level 2</button>
-        <button class="again-btn level-2-btn hidden" id="replayLevel2Btn">Play Level 2 Again</button>
+        <button class="next-level-btn" id="endPlayBtn">Play Level 2</button>
+        <button class="select-btn" id="openLevelSelectFromEndBtn">Select Level</button>
         <a class="back-btn" href="../">Back to Games</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="levelModalOverlay">
+    <div class="modal">
+      <h2 class="modal-title">Select Level</h2>
+      <p class="modal-subtitle">Choose any level to start playing.</p>
+
+      <div class="modal-buttons">
+        <button class="level-btn modal-level-btn level-1-btn" data-level="1">Play Level 1</button>
+        <button class="level-btn modal-level-btn level-2-btn" data-level="2">Play Level 2</button>
+        <button class="level-btn modal-level-btn level-3-btn" data-level="3">Play Level 3</button>
+        <button class="level-btn modal-level-btn level-4-btn" data-level="4">Play Level 4</button>
+        <button class="close-btn" id="closeModalBtn">Close</button>
       </div>
     </div>
   </div>
@@ -308,17 +373,46 @@
       { problem: "9 + 9", correct: 18, choices: [17, 18, 19, 20] }
     ];
 
+    const level3Items = [
+      { problem: "1 + 10", correct: 11, choices: [10, 11, 12, 13] },
+      { problem: "2 + 11", correct: 13, choices: [12, 13, 14, 15] },
+      { problem: "3 + 12", correct: 15, choices: [14, 15, 16, 17] },
+      { problem: "4 + 13", correct: 17, choices: [16, 17, 18, 19] },
+      { problem: "5 + 14", correct: 19, choices: [18, 19, 20, 21] },
+      { problem: "6 + 15", correct: 21, choices: [20, 21, 22, 23] },
+      { problem: "7 + 10", correct: 17, choices: [16, 17, 18, 19] },
+      { problem: "8 + 11", correct: 19, choices: [18, 19, 20, 21] },
+      { problem: "9 + 12", correct: 21, choices: [20, 21, 22, 23] },
+      { problem: "4 + 15", correct: 19, choices: [17, 18, 19, 20] }
+    ];
+
+    const level4Items = [
+      { problem: "1 + 16", correct: 17, choices: [16, 17, 18, 19] },
+      { problem: "2 + 17", correct: 19, choices: [18, 19, 20, 21] },
+      { problem: "3 + 18", correct: 21, choices: [20, 21, 22, 23] },
+      { problem: "4 + 19", correct: 23, choices: [22, 23, 24, 25] },
+      { problem: "5 + 20", correct: 25, choices: [24, 25, 26, 27] },
+      { problem: "6 + 16", correct: 22, choices: [21, 22, 23, 24] },
+      { problem: "7 + 17", correct: 24, choices: [23, 24, 25, 26] },
+      { problem: "8 + 18", correct: 26, choices: [25, 26, 27, 28] },
+      { problem: "9 + 19", correct: 28, choices: [27, 28, 29, 30] },
+      { problem: "3 + 20", correct: 23, choices: [22, 23, 24, 25] }
+    ];
+
     let items = [];
     let currentIndex = 0;
     let answered = false;
     let currentLevel = 1;
+    const maxLevel = 4;
 
     const startScreen = document.getElementById("startScreen");
     const gameScreen = document.getElementById("gameScreen");
     const endScreen = document.getElementById("endScreen");
 
-    const level1Btn = document.getElementById("level1Btn");
-    const level2Btn = document.getElementById("level2Btn");
+    const playStartBtn = document.getElementById("playStartBtn");
+    const openLevelSelectFromStartBtn = document.getElementById("openLevelSelectFromStartBtn");
+    const openLevelSelectFromEndBtn = document.getElementById("openLevelSelectFromEndBtn");
+    const endPlayBtn = document.getElementById("endPlayBtn");
 
     const problemLabel = document.getElementById("problemLabel");
     const problemDisplay = document.getElementById("problemDisplay");
@@ -328,9 +422,10 @@
     const nextBtn = document.getElementById("nextBtn");
 
     const endSubtitle = document.getElementById("endSubtitle");
-    const replayLevel1Btn = document.getElementById("replayLevel1Btn");
-    const level2AdvanceBtn = document.getElementById("level2AdvanceBtn");
-    const replayLevel2Btn = document.getElementById("replayLevel2Btn");
+
+    const levelModalOverlay = document.getElementById("levelModalOverlay");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+    const modalLevelButtons = document.querySelectorAll(".modal-level-btn");
 
     function shuffleArray(array) {
       const copy = [...array];
@@ -348,14 +443,26 @@
       screenToShow.classList.add("active");
     }
 
+    function openLevelModal() {
+      levelModalOverlay.classList.add("active");
+    }
+
+    function closeLevelModal() {
+      levelModalOverlay.classList.remove("active");
+    }
+
     function getLevelItems(level) {
-      return level === 1 ? level1Items : level2Items;
+      if (level === 1) return level1Items;
+      if (level === 2) return level2Items;
+      if (level === 3) return level3Items;
+      return level4Items;
     }
 
     function startGame(level) {
       currentLevel = level;
       items = shuffleArray(getLevelItems(level));
       currentIndex = 0;
+      closeLevelModal();
       showScreen(gameScreen);
       renderItem();
     }
@@ -407,18 +514,14 @@
     }
 
     function showEndScreen() {
-      if (currentLevel === 1) {
-        endSubtitle.textContent = "You completed Level 1.";
-        replayLevel1Btn.textContent = "Play Level 1 Again";
-        replayLevel1Btn.classList.remove("hidden");
-        level2AdvanceBtn.classList.remove("hidden");
-        replayLevel2Btn.classList.add("hidden");
+      endSubtitle.textContent = "You completed Level " + currentLevel + ".";
+
+      if (currentLevel < maxLevel) {
+        endPlayBtn.textContent = "Play Level " + (currentLevel + 1);
+        endPlayBtn.onclick = () => startGame(currentLevel + 1);
       } else {
-        endSubtitle.textContent = "You completed Level 2.";
-        replayLevel1Btn.textContent = "Play Level 1";
-        replayLevel1Btn.classList.remove("hidden");
-        level2AdvanceBtn.classList.add("hidden");
-        replayLevel2Btn.classList.remove("hidden");
+        endPlayBtn.textContent = "Play Level 4 Again";
+        endPlayBtn.onclick = () => startGame(4);
       }
 
       showScreen(endScreen);
@@ -437,12 +540,23 @@
       renderItem();
     }
 
-    level1Btn.addEventListener("click", () => startGame(1));
-    level2Btn.addEventListener("click", () => startGame(2));
-    replayLevel1Btn.addEventListener("click", () => startGame(1));
-    level2AdvanceBtn.addEventListener("click", () => startGame(2));
-    replayLevel2Btn.addEventListener("click", () => startGame(2));
+    playStartBtn.addEventListener("click", () => startGame(1));
+    openLevelSelectFromStartBtn.addEventListener("click", openLevelModal);
+    openLevelSelectFromEndBtn.addEventListener("click", openLevelModal);
     nextBtn.addEventListener("click", goToNextItem);
+    closeModalBtn.addEventListener("click", closeLevelModal);
+
+    levelModalOverlay.addEventListener("click", (event) => {
+      if (event.target === levelModalOverlay) {
+        closeLevelModal();
+      }
+    });
+
+    modalLevelButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        startGame(Number(button.dataset.level));
+      });
+    });
   </script>
 </body>
 </html>
