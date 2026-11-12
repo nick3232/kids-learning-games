@@ -252,6 +252,8 @@
 
     .modal {
       width: min(100%, 360px);
+      max-height: calc(100dvh - 36px);
+      overflow-y: auto;
       background: white;
       border-radius: 24px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.16);
@@ -282,6 +284,10 @@
     .modal-level-btn.level-2-btn { background: #a5b4fc; }
     .modal-level-btn.level-3-btn { background: #c4b5fd; }
     .modal-level-btn.level-4-btn { background: #f9a8d4; }
+
+    .problem-box, .choices {
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -309,7 +315,7 @@
 
       <div class="choices" id="choices"></div>
 
-      <div class="message" id="message"></div>
+      <div class="message" id="message" role="status"></div>
       <div class="progress" id="progress"></div>
 
       <button class="next-btn" id="nextBtn" disabled>Next</button>
@@ -332,8 +338,8 @@
   </div>
 
   <div class="modal-overlay" id="levelModalOverlay">
-    <div class="modal">
-      <h2 class="modal-title">Select Level</h2>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="levelModalTitle" tabindex="-1">
+      <h2 class="modal-title" id="levelModalTitle">Select Level</h2>
       <p class="modal-subtitle">Choose any level to start playing.</p>
 
       <div class="modal-buttons">
@@ -410,8 +416,6 @@
     const endScreen = document.getElementById("endScreen");
 
     const playStartBtn = document.getElementById("playStartBtn");
-    const openLevelSelectFromStartBtn = document.getElementById("openLevelSelectFromStartBtn");
-    const openLevelSelectFromEndBtn = document.getElementById("openLevelSelectFromEndBtn");
     const endPlayBtn = document.getElementById("endPlayBtn");
 
     const problemLabel = document.getElementById("problemLabel");
@@ -422,10 +426,6 @@
     const nextBtn = document.getElementById("nextBtn");
 
     const endSubtitle = document.getElementById("endSubtitle");
-
-    const levelModalOverlay = document.getElementById("levelModalOverlay");
-    const closeModalBtn = document.getElementById("closeModalBtn");
-    const modalLevelButtons = document.querySelectorAll(".modal-level-btn");
 
     function shuffleArray(array) {
       const copy = [...array];
@@ -441,14 +441,9 @@
       gameScreen.classList.remove("active");
       endScreen.classList.remove("active");
       screenToShow.classList.add("active");
-    }
-
-    function openLevelModal() {
-      levelModalOverlay.classList.add("active");
-    }
-
-    function closeLevelModal() {
-      levelModalOverlay.classList.remove("active");
+      screenToShow.setAttribute("tabindex", "-1");
+      screenToShow.focus();
+      window.scrollTo(0, 0);
     }
 
     function getLevelItems(level) {
@@ -541,21 +536,47 @@
     }
 
     playStartBtn.addEventListener("click", () => startGame(1));
-    openLevelSelectFromStartBtn.addEventListener("click", openLevelModal);
-    openLevelSelectFromEndBtn.addEventListener("click", openLevelModal);
     nextBtn.addEventListener("click", goToNextItem);
-    closeModalBtn.addEventListener("click", closeLevelModal);
+    const levelModalOverlay = document.getElementById("levelModalOverlay");
+    const levelModal = levelModalOverlay.querySelector(".modal");
+    const app = document.querySelector(".app");
+    let modalOpener = null;
 
-    levelModalOverlay.addEventListener("click", (event) => {
-      if (event.target === levelModalOverlay) {
-        closeLevelModal();
+    function openLevelModal(event) {
+      modalOpener = event.currentTarget;
+      levelModalOverlay.classList.add("active");
+      app.inert = true;
+      levelModal.querySelector("button").focus();
+    }
+
+    function closeLevelModal() {
+      levelModalOverlay.classList.remove("active");
+      app.inert = false;
+      if (modalOpener) modalOpener.focus();
+    }
+
+    document.getElementById("openLevelSelectFromStartBtn").addEventListener("click", openLevelModal);
+    document.getElementById("openLevelSelectFromEndBtn").addEventListener("click", openLevelModal);
+    document.getElementById("closeModalBtn").addEventListener("click", closeLevelModal);
+    levelModalOverlay.addEventListener("click", event => {
+      if (event.target === levelModalOverlay) closeLevelModal();
+    });
+    levelModalOverlay.addEventListener("keydown", event => {
+      if (event.key === "Escape") closeLevelModal();
+      if (event.key !== "Tab") return;
+      const buttons = [...levelModal.querySelectorAll("button")];
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     });
-
-    modalLevelButtons.forEach(button => {
-      button.addEventListener("click", () => {
-        startGame(Number(button.dataset.level));
-      });
+    document.querySelectorAll(".modal-level-btn").forEach(button => {
+      button.addEventListener("click", () => startGame(Number(button.dataset.level)));
     });
   </script>
 </body>
