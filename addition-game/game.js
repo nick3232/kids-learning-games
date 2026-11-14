@@ -57,6 +57,20 @@ export const levels = [
       { problem: "9 + 19", correct: 28, choices: [27, 28, 29, 30] },
       { problem: "3 + 20", correct: 23, choices: [22, 23, 24, 25] }
     ],
+  },
+  {
+    questions: [
+      { problem: "10 + 11", correct: 21, choices: [20, 21, 22, 23] },
+      { problem: "12 + 10", correct: 22, choices: [21, 22, 23, 24] },
+      { problem: "12 + 12", correct: 24, choices: [22, 23, 24, 25] },
+      { problem: "11 + 14", correct: 25, choices: [24, 25, 26, 27] },
+      { problem: "14 + 12", correct: 26, choices: [25, 26, 27, 28] },
+      { problem: "15 + 12", correct: 27, choices: [25, 26, 27, 28] },
+      { problem: "13 + 15", correct: 28, choices: [27, 28, 29, 30] },
+      { problem: "16 + 13", correct: 29, choices: [28, 29, 30, 31] },
+      { problem: "14 + 16", correct: 30, choices: [28, 29, 30, 31] },
+      { problem: "17 + 15", correct: 32, choices: [30, 31, 32, 33] }
+    ],
   }
 ];
 
