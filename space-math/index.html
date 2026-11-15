@@ -27,7 +27,9 @@ body {
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 1rem;
+  box-sizing: border-box;
 }
 
 header {
@@ -55,11 +57,12 @@ header p {
   width: 90%;
   max-width: 640px;
   aspect-ratio: 4 / 3;
+  min-height: 360px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
   position: relative;
   padding: 1rem;
   box-sizing: border-box;
@@ -104,33 +107,68 @@ header p {
 #question {
   font-size: 1.6rem;
   margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.answer-controls {
+  max-width: 100%;
+  text-align: center;
+}
+
+.answer-controls label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.answer-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 input[type="text"] {
-  font-size: 1.2rem;
-  padding: 0.4rem;
+  font-size: 1.3rem;
+  padding: 0.5rem;
   border-radius: 0.4rem;
   border: none;
-  width: 80px;
+  width: 96px;
+  min-height: 48px;
+  box-sizing: border-box;
   text-align: center;
-  outline: none;
 }
 
 #submitBtn {
   background: var(--accent);
-  color: white;
+  color: var(--bg);
   border: none;
   border-radius: 0.4rem;
   padding: 0.5rem 1rem;
-  font-size: 1rem;
-  margin-left: 0.5rem;
+  font-size: 1.1rem;
+  min-width: 96px;
+  min-height: 48px;
   cursor: pointer;
+}
+
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #fcd34d;
+  outline-offset: 3px;
+}
+
+#submitBtn:disabled {
+  opacity: 0.65;
+  cursor: default;
 }
 
 #feedback {
   margin-top: 0.6rem;
   font-size: 1rem;
   color: var(--muted);
+  min-height: 1.5em;
+  text-align: center;
 }
 
 /* ---------- Controls ---------- */
@@ -169,14 +207,17 @@ input[type="text"] {
   opacity: 0.9;
 }
 
-.hidden {
-  display: none;
-}
-
 @media (max-width: 480px) {
   header h1 { font-size: 1.4rem; }
   .game-container { aspect-ratio: 1 / 1; }
-  #map, #rocketRow { font-size: 1.4rem; }
+  #map, #rocketRow { font-size: clamp(1rem, 5vw, 1.4rem); }
+}
+
+/* Keep controls in the document flow when a keyboard or landscape view
+   leaves little vertical space. The page can scroll instead of clipping. */
+@media (max-height: 500px) {
+  .game-container { aspect-ratio: auto; min-height: 0; }
+  #rocketRow { margin-bottom: 1.5rem; }
 }
 </style>
 </head>
@@ -191,11 +232,15 @@ input[type="text"] {
   <div id="map"></div>
   <div id="rocketRow"><div id="rocket">🚀</div></div>
   <div id="question">Press Start to begin</div>
-  <div>
-    <input id="answer" type="text" disabled>
-    <button id="submitBtn" disabled>Answer</button>
+  <div class="answer-controls">
+    <label for="answer">Your answer</label>
+    <div class="answer-row">
+      <input id="answer" type="text" inputmode="numeric" pattern="[0-9]*"
+        autocomplete="off" spellcheck="false" aria-describedby="question feedback" disabled>
+      <button id="submitBtn" disabled>Answer</button>
+    </div>
   </div>
-  <div id="feedback"></div>
+  <div id="feedback" role="status" aria-atomic="true"></div>
 </div>
 
 <div class="controls">
@@ -217,11 +262,11 @@ const answerInput = document.getElementById("answer");
 const submitBtn = document.getElementById("submitBtn");
 const feedbackEl = document.getElementById("feedback");
 const startResetBtn = document.getElementById("startResetBtn");
-const backToGamesBtn = document.getElementById("backToGamesBtn");
 
 let currentIndex = 0;
 let correctAnswers = 0;
 let currentAnswer = null;
+let nextQuestionTimer = null;
 
 function createMap() {
   mapContainer.innerHTML = "";
@@ -241,22 +286,35 @@ function generateQuestion() {
   questionEl.textContent = `${a} + ${b} = ?`;
   feedbackEl.textContent = "";
   answerInput.value = "";
+  answerInput.removeAttribute("aria-invalid");
 }
 
 function startGame() {
+  clearTimeout(nextQuestionTimer);
+  nextQuestionTimer = null;
   correctAnswers = 0;
   currentIndex = 0;
   createMap();
   generateQuestion();
   answerInput.disabled = false;
   submitBtn.disabled = false;
-  backToGamesBtn.classList.add("hidden");
   answerInput.focus();
 }
 
 function checkAnswer() {
-  const userAnswer = Number(answerInput.value.trim());
+  if (answerInput.disabled || submitBtn.disabled) return;
+
+  const value = answerInput.value.trim();
+  const userAnswer = Number(value);
+  if (!/^[0-9]+$/.test(value) || !Number.isSafeInteger(userAnswer)) {
+    feedbackEl.textContent = "Please enter a whole number.";
+    answerInput.setAttribute("aria-invalid", "true");
+    return;
+  }
+  answerInput.removeAttribute("aria-invalid");
+
   if (userAnswer === currentAnswer) {
+    submitBtn.disabled = true;
     correctAnswers++;
     updateMap();
     if (correctAnswers === mapIcons.length - 1) {
@@ -264,10 +322,13 @@ function checkAnswer() {
       feedbackEl.textContent = "";
       answerInput.disabled = true;
       submitBtn.disabled = true;
-      backToGamesBtn.classList.remove("hidden");
     } else {
       feedbackEl.textContent = "✅ Correct!";
-      generateQuestion();
+      nextQuestionTimer = setTimeout(() => {
+        nextQuestionTimer = null;
+        generateQuestion();
+        submitBtn.disabled = false;
+      }, 800);
     }
   } else {
     feedbackEl.textContent = "❌ Try again!";
@@ -301,10 +362,15 @@ function resetGame() {
 }
 
 submitBtn.addEventListener("click", checkAnswer);
-answerInput.addEventListener("keypress", e => {
-  if (e.key === "Enter" && !submitBtn.disabled) checkAnswer();
+answerInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    if (!e.repeat) checkAnswer();
+  }
 });
+answerInput.addEventListener("input", () => answerInput.removeAttribute("aria-invalid"));
 startResetBtn.addEventListener("click", resetGame);
+window.addEventListener("resize", () => moveRocket(currentIndex));
 
 // Initialize
 createMap();
