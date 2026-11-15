@@ -38,9 +38,10 @@ export const levels = [
 
 initializeQuiz({
   levels,
-  completionText: "Congratulations, you completed the game.",
-  renderQuestion(question) {
+  renderQuestion(question, levelNumber) {
     document.getElementById("emojiDisplay").textContent = question.emoji;
     document.getElementById("wordDisplay").textContent = question.word.toUpperCase();
+    document.querySelector("#endScreen .title").textContent =
+      levelNumber === levels.length ? "Game Complete!" : "Great Job!";
   },
 });
