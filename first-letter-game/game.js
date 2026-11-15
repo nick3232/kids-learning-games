@@ -17,6 +17,22 @@ export const levels = [
       { emoji: "🚚", word: "Van", correct: "V", choices: ["V", "N", "S", "W"] },
       { emoji: "🛻", word: "Pickup", correct: "P", choices: ["P", "H", "K", "R"] }
     ],
+  },
+  {
+    questions: [
+      { emoji: "🎩", word: "Hat", correct: "H", choices: ["H", "N", "M", "A"] },
+      { emoji: "🍦", word: "Ice cream", correct: "I", choices: ["I", "E", "A", "O"] },
+      { emoji: "🧃", word: "Juice", correct: "J", choices: ["J", "G", "T", "F"] },
+      { emoji: "🪁", word: "Kite", correct: "K", choices: ["K", "R", "H", "P"] },
+      { emoji: "🦁", word: "Lion", correct: "L", choices: ["L", "I", "T", "D"] },
+      { emoji: "🌙", word: "Moon", correct: "M", choices: ["M", "N", "W", "B"] },
+      { emoji: "👃", word: "Nose", correct: "N", choices: ["N", "M", "H", "S"] },
+      { emoji: "🐙", word: "Octopus", correct: "O", choices: ["O", "Q", "C", "G"] },
+      { emoji: "🐰", word: "Rabbit", correct: "R", choices: ["R", "P", "B", "K"] },
+      { emoji: "☀️", word: "Sun", correct: "S", choices: ["S", "C", "Z", "T"] },
+      { emoji: "☂️", word: "Umbrella", correct: "U", choices: ["U", "V", "Y", "A"] },
+      { emoji: "🦓", word: "Zebra", correct: "Z", choices: ["Z", "S", "N", "E"] }
+    ],
   }
 ];
 
